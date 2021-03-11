@@ -356,6 +356,7 @@
             }
             array_push($this->data,$this->tempData);
 			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
+            // done
 		}
     }
 ?>
