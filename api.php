@@ -48,7 +48,7 @@
                 echo $function->findDocument($_GET["acc_id"],$_GET["sklad"],$_GET["data"]);
                 break;
             case LIST_ALL_DOCUMENT:
-                echo $function->listAllDocument($_GET["acc_id"],$_GET["sklad"],$_GET["data"]);
+                echo $function->listAllDocument($_GET["acc_id"],$_GET["sklad"],$_GET["data"],$_GET["year"]);
                 break;
             case ENTERING_MODE:
                 echo $function->enteringMode($_GET["acc_id"],$_GET["sklad"]);

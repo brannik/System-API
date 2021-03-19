@@ -286,18 +286,18 @@
         }
 
 
-        function listAllDocument($accId,$sklad,$data){
+        function listAllDocument($accId,$sklad,$date,$year){
             require("config.php");
             $currentMonth = date('m', time());
             $countNonEnteredDocs =0;
             $countEnteredDocs =0;
-            $sqlCountDocsNo = "SELECT * FROM documents WHERE owner_id='" . $accId . "' AND status='0' AND MONTH(date) = MONTH(NOW())";
+            $sqlCountDocsNo = "SELECT * FROM documents WHERE owner_id='" . $accId . "' AND status='0' AND MONTH(date) = '" . $date . "' AND YEAR(date) ='" . $year . "'";
             $resulnDocsNo = $conn->query($sqlCountDocsNo);
             if($resulnDocsNo->num_rows > 0){
                 $countNonEnteredDocs = $resulnDocsNo->num_rows;
             }
 
-            $sqlCountDocsYes = "SELECT * FROM documents WHERE owner_id='" . $accId . "' AND status='1' AND MONTH(date) = MONTH(NOW())";
+            $sqlCountDocsYes = "SELECT * FROM documents WHERE owner_id='" . $accId . "' AND status='1' AND MONTH(date) = '" . $date . "' AND YEAR(date) ='" . $year . "'";
             $resulnDocsYes = $conn->query($sqlCountDocsYes);
             if($resulnDocsYes->num_rows > 0){
                 $countEnteredDocs = $resulnDocsYes->num_rows;
@@ -308,7 +308,7 @@
                 "TOTAL" => $countEnteredDocs + $countNonEnteredDocs
             );
             array_push($this->data,$this->tempData);
-            $sqlGetDocuments = "SELECT * FROM documents WHERE owner_id='" . $accId . "' AND MONTH(date) = MONTH(NOW()) ORDER BY status ASC";
+            $sqlGetDocuments = "SELECT * FROM documents WHERE owner_id='" . $accId . "' AND MONTH(date) = '" . $date . "' AND YEAR(date) ='" . $year . "' ORDER BY status ASC";
             $docsResultList = $conn->query($sqlGetDocuments);
             if($docsResultList->num_rows > 0){
                 foreach($docsResultList as $myData){
@@ -356,7 +356,6 @@
             }
             array_push($this->data,$this->tempData);
 			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
-            //  ssdfsdfsdf
 		}
     }
 ?>
