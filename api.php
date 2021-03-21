@@ -87,7 +87,7 @@
 				echo $function->check_date($_GET["year"],$_GET["month"],$_GET["day"],$_GET["acc_id"],$_GET["sklad"]);
 				break;
 			case REQUEST_DATE:
-				echo $function->request_date();
+				echo $function->request_date($_GET["req_type"],$_GET["date_type"],$_GET["my_acc"],$_GET["sklad"],$_GET["year"],$_GET["month"],$_GET["day"],$_GET["old_date_id"],$_GET["old_date_text"],$_GET["old_date_owner"],$_GET["my_names"]);
 				break;
             default:
                 echo json_encode("NO_REQUEST");

@@ -566,10 +566,66 @@
 			
 			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
 		}
-		
-		function request_date(){
+					
+		function request_date($req_type,$date_type,$my_acc_id,$sklad,$year,$month,$day,$old_date_id,$old_date_text,$old_date_owner_id,$my_names){
 			require("config.php");
 			
+			
+			// req_type = 1 svoboden den
+			// date_type -> 1 vtora 2 nedelq 3 pochivka
+			
+			if($req_type == 1){
+				// za prazni dati
+				$finalDate = $year . "-" . $month . "-" . $day;
+				$sqlSetNewDate = "INSERT INTO dates (ovner_id,sklad,type,date) VALUES('" . $my_acc_id . "','" . $sklad . "','" . $date_type . "','" . $finalDate ."')";
+				try{
+					if($conn->query($sqlSetNewDate) === TRUE){
+						$this->tempData = array(
+							"REQ_STATE" => 1,
+							"REQ_DATE" => $finalDate 
+						);
+						array_push($this->data,$this->tempData);
+					}else{
+						$this->tempData = array(
+							"REQ_STATE" => 0,
+							"REQ_DATE" => "SQL ERROR"
+						);
+						array_push($this->data,$this->tempData);
+					}
+				}catch(MySQLException $e){
+					$this->tempData = array(
+						"REQ_STATE" => 0,
+						"REQ_DATE" => $e
+					);
+					array_push($this->data,$this->tempData);		
+				}
+				
+			}else if($req_type == 2){
+				$finalDate = $year . "-" . $month . "-" . $day;
+				$sqlPrepare = "INSERT INTO notifycations (sender_id,reciever_id,type,status,text,send_to_app,pending) VALUES ('". $my_acc_id ."','" . $old_date_owner_id . "','" . $date_type . "','0','" . $old_date_id . "','0','0')";
+				try{
+					if($conn->query($sqlPrepare) === TRUE){
+						$this->tempData = array(
+							"REQ_STATE" => 1,
+							"REQ_DATE" => $finalDate
+						);
+						array_push($this->data,$this->tempData);
+					}else{
+						$this->tempData = array(
+							"REQ_STATE" => 0,
+							"REQ_DATE" => "SQL ERROR"
+						);
+						array_push($this->data,$this->tempData);
+					}
+				}catch(MySQLException $e){
+					$this->tempData = array(
+						"REQ_STATE" => 0,
+						"REQ_DATE" => $e
+					);
+					array_push($this->data,$this->tempData);
+				}
+			}
+			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
 		}
 	}
 ?>
