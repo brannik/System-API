@@ -5,7 +5,7 @@
         public $tempData = array();
         public $accounts = array();
         public $realName = "NONE";
-        public $skladNames = array("HOOCK","Първи","Втори","Трети","Четвърти","Победа");
+        public $skladNames = array("Неизвестен","Първи","Втори","Трети","Четвърти","Победа");
         public $docStatus = array("НЕ Отразена","Отразена");
         function logIn($id){
             require("config.php");
@@ -87,11 +87,12 @@
 
         function inAppNotify($acc_id,$sklad_id){
             require("config.php");
-            $sqlGetNotify = "SELECT * FROM notifycations WHERE reciever_id='" . $acc_id . "' OR reciever_id='0' ORDER BY type ASC";
+            $sqlGetNotify = "SELECT * FROM notifycations WHERE reciever_id='" . $acc_id . "' OR reciever_id='0' AND status='0' ORDER BY type ASC";
             $result = $conn->query($sqlGetNotify);
             if($result->num_rows > 0){
                 
                 foreach($result as $row){
+					if($row["pending"] == 0){
                     if($row["reciever_id"] == 0){
                         // system notifycation
                         $rowD = $row["status"];
@@ -117,7 +118,6 @@
                     }else{
                         // if status is pending
                         
-                        if($row["status"] == 0){
                             // notifycation from other user
                             
                             $sqlFindUserNames = "SELECT * FROM account WHERE id='" . $row["sender_id"] . "'"; // get usernames of sender
@@ -134,8 +134,6 @@
                                         $DATE_INFO = $dateInfo->fetch_assoc();
                                         $DATE_T = $DATE_INFO["date"]; // to convert in user friendly type
                                     }
-                                    
-
                                     $this->tempData = array(
                                         "notification_id" => $row["id"],
                                         "notification_type" => "SHIFT_REQUEST",
@@ -159,20 +157,31 @@
                                     array_push($this->data,$this->tempData);
                                 break; 
                                 case 3:
-                                    // notification user accepted/declined your date request
-                                    if($row["status"] == 0){
-                                        
+                                    $sqlGetDateById = "SELECT * FROM dates WHERE id='" . $row["text"] . "'"; // get real date from given id
+                                    $dateInfo = $conn->query($sqlGetDateById);
+                                    if($dateInfo->num_rows > 0){
+                                        $DATE_INFO = $dateInfo->fetch_assoc();
+                                        $DATE_T = $DATE_INFO["date"]; // to convert in user friendly type
+                                    }
                                         $this->tempData = array(
                                             "notification_id" => $row["id"],
-                                            "notification_type" => "RESULT_REQUEST",
-                                            "notification_text" => $row["text"]
+                                            "notification_type" => "REST_REQUEST",
+                                            "notification_text" => "Заявка за размяна на почивка на дата - " . $DATE_T . " от " . $USER_DATA["name"] . " " . $USER_DATA["s_name"]
                                         );
                                         array_push($this->data,$this->tempData); 
-                                    }
                                 break;
+								case 4:
+									// get message
+										$this->tempData = array(
+                                            "notification_id" => $row["id"],
+                                            "notification_type" => "REST_REQUEST",
+                                            "notification_text" => $row["text"]
+                                        );
+                                        array_push($this->data,$this->tempData);
+								break;
                             }
-                        }
-                    }
+						}
+					}
                 }
             }
             return json_encode($this->data,JSON_UNESCAPED_UNICODE);
@@ -262,7 +271,7 @@
                     array_push($this->accounts,$tempAcc);
                 }
             }
-            $sqlFindDocument = "SELECT * FROM documents WHERE doc_number LIKE '%" . $data . "%'";
+            $sqlFindDocument = "SELECT * FROM documents WHERE doc_number LIKE '%" . $data . "%' LIMIT 50";
             $resultDocuments = $conn->query($sqlFindDocument);
            
             if($resultDocuments->num_rows > 0){
@@ -357,5 +366,210 @@
             array_push($this->data,$this->tempData);
 			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
 		}
-    }
+		function getCalendar($year,$month,$sklad){
+			require("config.php");
+			$sqlGetDates = "SELECT * FROM dates WHERE MONTH(date) = '" . $month . "' AND YEAR(date) ='" . $year . "' AND sklad='" . $sklad . "' ORDER BY date ASC";
+			$datesResult = $conn->query($sqlGetDates);
+			if($datesResult->num_rows > 0){
+				foreach($datesResult as $result){
+					$dayNumber = explode('-', $result["date"]);
+					$dayNumber = ltrim($dayNumber[2], '0');
+					$this->tempData = array(
+						"USER" => $result["ovner_id"],
+						"TYPE" => $result["type"],
+						"NUMBER" => $dayNumber
+					);
+					array_push($this->data,$this->tempData);
+				}	
+			}
+			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
+		}
+		
+		function get_request_list($reciever,$sklad){
+			require("config.php");
+			$sqlGetData = "SELECT * FROM notifycations WHERE reciever_id='" . $reciever . "' AND pending='0' ";
+			$datesResult = $conn->query($sqlGetData);
+			$user_names = "";
+			$date_text = "";
+			$date_id = "";
+			$senderId = "";
+			$notify_id = "";
+			if($datesResult->num_rows > 0){
+				foreach($datesResult as $result){
+					if($result["type"] <= 3){
+					$senderId = $result["sender_id"];
+					$notify_id = $result["id"];
+					$sqlFindUser = "SELECT name,s_name FROM account WHERE id='" . $result["sender_id"] . "'";
+					$findUser = $conn->query($sqlFindUser);
+					if($findUser->num_rows > 0){
+						foreach($findUser as $user){
+							$user_names = $user["name"] . " " . $user["s_name"];
+						}
+					}
+					if(is_numeric($result["text"])){
+						$sqlFindDate = "SELECT * FROM dates WHERE id='" . $result["text"] . "'";
+						$dateResult = $conn->query($sqlFindDate);
+						if($dateResult->num_rows > 0){
+							foreach($dateResult as $row){
+								$date_text = $row["date"];
+								$date_id = $row["id"];
+							}
+						}
+						$this->tempData = array(
+							"NOT_TYPE" => $result["type"],
+							"NOT_DATE" => $date_text,
+							"NOT_SENDER" => $user_names,
+							"NOT_DATE_ID" => $date_id,
+							"NOT_SENDER_ID" => $senderId,
+							"NOT_ID" => $notify_id
+						);
+					
+					}
+					array_push($this->data,$this->tempData);
+					}
+				}	
+			}
+			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
+		}
+		function acceptRequest($dateId,$senderId,$not_id,$reciever,$names,$msg,$dateString){
+			require("config.php");
+			$sqlAccept = "UPDATE notifycations SET pending='1' WHERE id='" . $not_id . "'";
+			$msgA = "Потребител " . $names . " прие вашата заявка за " . $msg ." за дата - " . $dateString;
+			$sqlSendNotifyA = "INSERT INTO notifycations (sender_id,reciever_id,type,status,text,send_to_app,pending) 
+				VALUES('" . $reciever . "','" . $senderId . "','4','0','" . $msgA . "','0','2')";
+			$sqlUpdateDates = "UPDATE dates SET ovner_id='" . $senderId . "' WHERE id='" . $dateId . "'";
+			// execute queries and return info
+			if($conn->query($sqlAccept) === TRUE){
+				if($conn->query($sqlSendNotifyA) === TRUE){
+					if($conn->query($sqlUpdateDates) === TRUE){
+						$this->tempData = array(
+							"RESULT" => 1
+						);
+						array_push($this->data,$this->tempData);
+					}else{
+						$this->tempData = array(
+							"RESULT" => 3
+						);
+						array_push($this->data,$this->tempData);
+					}
+				}else{
+					$this->tempData = array(
+						"RESULT" => 3
+					);
+					array_push($this->data,$this->tempData);
+				}
+			}else{
+				$this->tempData = array(
+					"RESULT" => 3
+				);
+				array_push($this->data,$this->tempData);
+			}
+			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
+		}
+		function declineRequest($dateId,$senderId,$not_id,$reciever,$names,$msg,$dateString){
+			require("config.php");
+			$sqlDecline = "UPDATE notifycations SET pending='2' WHERE id='" . $not_id . "'";
+			$msgA = "Потребител " . $names . " отказа вашата заявка за " . $msg ." за дата - " . $dateString;
+			$sqlSendNotify = "INSERT INTO notifycations (sender_id,reciever_id,type,status,text,send_to_app,pending) 
+				VALUES('" . $reciever . "','" . $senderId . "','4','0','" . $msgA . "','0','3')";
+				
+			if($conn->query($sqlDecline) === TRUE){
+				if($conn->query($sqlSendNotify) === TRUE){
+					$this->tempData = array(
+						"RESULT" => 0
+					);
+					array_push($this->data,$this->tempData);
+				}
+			}else{
+				$this->tempData = array(
+					"RESULT" => 3
+				);
+				array_push($this->data,$this->tempData);
+			}
+			// izvestieto e pending=1
+			// izprati izvestie s otkaz
+			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
+		}
+		
+		function get_doc_count($month,$acc_id,$sklad){
+			require("config.php");
+			$sqlGetDoc = "SELECT * FROM documents WHERE owner_id='" . $acc_id . "' AND status='0' AND MONTH(date) = '" . $month . "'";
+			$sqlGetAll = "SELECT * FROM documents WHERE owner_id='" . $acc_id . "' AND MONTH(date) = '" . $month . "'";
+			$countResult = $conn->query($sqlGetAll);
+			$coutUn = $conn->query($sqlGetDoc);
+			$total = 0;
+			$unChecked = 0;
+	
+			if($countResult->num_rows > 0){
+				$total = $countResult->num_rows;
+			}
+			
+			if($coutUn->num_rows > 0){
+				$unChecked = $coutUn->num_rows;
+			}
+			
+			$this->tempData = array(
+				"COUNT_TOTAL" => $total,
+				"COUNT_UNCHECKED" => $unChecked
+			);
+			array_push($this->data,$this->tempData);
+			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
+		}
+		
+		function validate(){
+			require("config.php");
+			$min = 0;
+			$max = 0;
+			$sqlGetMin = "SELECT * FROM documents ORDER BY doc_number ASC LIMIT 1";
+			$sqlGetMax = "SELECT * FROM documents ORDER BY doc_number DESC LIMIT 1";
+			
+			$MIN = $conn->query($sqlGetMin);
+			$MAX = $conn->query($sqlGetMax);
+				$A = $MIN->fetch_assoc();
+				$min = $A["doc_number"];
+				$B = $MAX->fetch_assoc();
+				$max = $B["doc_number"];
+				
+				$this->tempData = array(
+					"MIN" => $min,
+					"MAX" => $max
+				);
+				array_push($this->data,$this->tempData);
+			
+			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
+		}
+		
+		function check_date($year,$month,$day,$acc,$sklad){
+			require("config.php");
+			$userNames = "";
+			$sqlFindDates = "SELECT * FROM dates WHERE YEAR(date) = '" . $year . "' AND MONTH(date) = '" . $month . "' AND DAY(date) = '" . $day . "' AND sklad='" . $sklad . "'";
+			$dateResult = $conn->query($sqlFindDates);
+			if($dateResult->num_rows > 0){
+				foreach($dateResult as $date){
+					$sqlGetNames = "SELECT * FROM account WHERE id='" . $date["ovner_id"] . "'";
+					$resultNames = $conn->query($sqlGetNames);
+					if($resultNames->num_rows > 0){
+						foreach($resultNames as $names){
+							$userNames = $names["name"] . " " . $names["s_name"];
+						}
+					}
+					$this->tempData = array(
+						"DATE_ID" => $date["id"],
+						"DATE" => $date["date"],
+						"DATE_TYPE" => $date["type"],
+						"DATE_OWNER_NAMES" => $userNames,
+						"DATE_OWNER_ID" => $date["ovner_id"]
+					);
+					array_push($this->data,$this->tempData);
+				}
+			}
+			
+			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
+		}
+		
+		function request_date(){
+			require("config.php");
+			
+		}
+	}
 ?>
