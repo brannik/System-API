@@ -19,9 +19,9 @@
 	define("ACCEPT_REQUEST","accept_request"); 
 	define("DECLINE_REQUEST","decline_request"); 
 	define("GET_DOC_COUNT","get_doc_count");
-	define("VALIDATE","get_min_max");
 	define("CHECK_DATE","check_date");
 	define("REQUEST_DATE","request_date");
+	define("UPDATE_TOKEN","update_token");
     define("TEST","test");
 
     $function = new functions();
@@ -30,7 +30,7 @@
 		
         switch($_GET["request"]){
             case LOGIN: // done
-                echo $function->login($_GET["dev_id"]);
+                echo $function->login($_GET["dev_id"],$_GET["month"]);
             break;
             case REGISTER: 
                 echo $function->register($_GET["f_name"],$_GET["s_name"],$_GET["dev_id"],$_GET["username"]);
@@ -80,14 +80,14 @@
 			case GET_DOC_COUNT:
 				echo $function->get_doc_count($_GET["month"],$_GET["acc_id"],$_GET["sklad"]);
 				break;
-			case VALIDATE:
-				echo $function->validate();
-				break;
 			case CHECK_DATE:
 				echo $function->check_date($_GET["year"],$_GET["month"],$_GET["day"],$_GET["acc_id"],$_GET["sklad"]);
 				break;
 			case REQUEST_DATE:
 				echo $function->request_date($_GET["req_type"],$_GET["date_type"],$_GET["my_acc"],$_GET["sklad"],$_GET["year"],$_GET["month"],$_GET["day"],$_GET["old_date_id"],$_GET["old_date_text"],$_GET["old_date_owner"],$_GET["my_names"]);
+				break;
+			case UPDATE_TOKEN:
+				echo $function->update_token($_GET["acc_id"],$_GET["token"]);
 				break;
             default:
                 echo json_encode("NO_REQUEST");

@@ -7,13 +7,21 @@
         public $realName = "NONE";
         public $skladNames = array("Неизвестен","Първи","Втори","Трети","Четвърти","Победа");
         public $docStatus = array("НЕ Отразена","Отразена");
-        function logIn($id){
+        function logIn($id,$month){
             require("config.php");
             $sql = "SELECT * FROM account WHERE device_id='" . $id . "'";
             $result = $conn->query($sql);
             if($result->num_rows > 0){
+				$mesec = $month + 1;
+				
                 $row = $result->fetch_assoc();
-                $this->data = array(
+				$sqlGetCount = "SELECT * FROM documents WHERE MONTH(date) = '" . $mesec. "' AND owner_id='" . $row["id"] . "' AND status='0'";
+				$counter = $conn->query($sqlGetCount);
+				$count = $counter->num_rows;
+				$sqlGetCountNotify = "SELECT * FROM notifycations WHERE reciever_id='" . $row["id"] . "' AND type in (1,2,3) AND pending='0'";
+				$notifyCounter = $conn->query($sqlGetCountNotify);
+                $notCount = $notifyCounter->num_rows;
+				$this->data = array(
                     "action"  => "login",
                     "account" => array(
                         "username"  => $row["username"],
@@ -25,6 +33,8 @@
                         "noti_req"   => $row["req_not"],
                         "active"   => $row["active"],
                         "sklad"    => $row["sklad"],
+						"neotrazeni" => $count,
+						"izvestiq" => $notCount
                     )
                 );
                 $result->free();
@@ -81,7 +91,11 @@
             $sqlGetVer = "SELECT * FROM updates ORDER BY version ASC LIMIT 1";
             $version = $conn->query($sqlGetVer);
             $row = $version->fetch_assoc();
-            $this->data = array("last_version" => $row["version"]);
+            $this->data = array(
+				"last_version" => $row["version"],
+				"info" => $row["info"]
+			);
+			
             return json_encode($this->data,JSON_UNESCAPED_UNICODE);
         }
 
@@ -516,28 +530,6 @@
 			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
 		}
 		
-		function validate(){
-			require("config.php");
-			$min = 0;
-			$max = 0;
-			$sqlGetMin = "SELECT * FROM documents ORDER BY doc_number ASC LIMIT 1";
-			$sqlGetMax = "SELECT * FROM documents ORDER BY doc_number DESC LIMIT 1";
-			
-			$MIN = $conn->query($sqlGetMin);
-			$MAX = $conn->query($sqlGetMax);
-				$A = $MIN->fetch_assoc();
-				$min = $A["doc_number"];
-				$B = $MAX->fetch_assoc();
-				$max = $B["doc_number"];
-				
-				$this->tempData = array(
-					"MIN" => $min,
-					"MAX" => $max
-				);
-				array_push($this->data,$this->tempData);
-			
-			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
-		}
 		
 		function check_date($year,$month,$day,$acc,$sklad){
 			require("config.php");
@@ -624,6 +616,32 @@
 					);
 					array_push($this->data,$this->tempData);
 				}
+			}
+			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
+		}
+		function update_token($acc_id,$token){
+			require("config.php");
+			$sql = "UPDATE account SET token='" . $token . "' WHERE id='" . $acc_id . "'";
+			try{
+				if($conn->query($sql) === TRUE){
+					$this->tempData = array(
+						"REQ_STATE" => 1,
+						"RESPONSE" => "OK"
+					);
+					array_push($this->data,$this->tempData);
+				}else{
+					$this->tempData = array(
+						"REQ_STATE" => 0,
+						"RESPONSE" => "SQL ERROR"
+					);
+					array_push($this->data,$this->tempData);
+				}
+			}catch(MySQLException $e){
+				$this->tempData = array(
+					"REQ_STATE" => 0,
+					"RESPONSE" => $e
+				);
+				array_push($this->data,$this->tempData);
 			}
 			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
 		}
