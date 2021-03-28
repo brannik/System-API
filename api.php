@@ -1,6 +1,7 @@
 <?php
     require("config.php");
     require("functions.php");
+	require("admin_api.php");
 
     define("LOGIN","login");
     define("REGISTER","register");
@@ -22,9 +23,15 @@
 	define("CHECK_DATE","check_date");
 	define("REQUEST_DATE","request_date");
 	define("UPDATE_TOKEN","update_token");
-    define("TEST","test");
+	define("TEST","test");
+	
+	// admin functions
+	define("ADMIN_GET_ACCOUNTS_ALL","adminGetAccounts");
+    define("ADMIN_DELETE_ACCOUNT","adminDeleteAccount");
+	define("ADMIN_EDIT_ACCOUNT","adminEditAccount");
 
     $function = new functions();
+	$admin = new admin_functions();
 
     if(isset($_GET["request"])){
 		
@@ -88,6 +95,17 @@
 				break;
 			case UPDATE_TOKEN:
 				echo $function->update_token($_GET["acc_id"],$_GET["token"]);
+				break;
+				
+			// admin requests
+			case ADMIN_GET_ACCOUNTS_ALL:
+				echo $admin->collect_accounts($_GET["sklad"]);
+				break;
+			case ADMIN_DELETE_ACCOUNT:
+				echo $admin->delete_account($_GET["acc_id"]);
+				break;
+			case ADMIN_EDIT_ACCOUNT:
+				echo $admin->edit_account($_GET["acc_id"],$_GET["username"],$_GET["f_name"],$_GET["s_name"],$_GET["rank"],$_GET["sklad"]);
 				break;
             default:
                 echo json_encode("NO_REQUEST");

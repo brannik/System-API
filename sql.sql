@@ -32,15 +32,16 @@ CREATE TABLE IF NOT EXISTS `account` (
   `sklad` int(11) NOT NULL DEFAULT '0',
   `token` mediumtext NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
 
 -- Дъмп данни за таблица system_db.account: ~3 rows (приблизително)
 DELETE FROM `account`;
 /*!40000 ALTER TABLE `account` DISABLE KEYS */;
 INSERT INTO `account` (`id`, `username`, `name`, `s_name`, `device_id`, `rank`, `msg_not`, `req_not`, `active`, `sklad`, `token`) VALUES
-	(1, 'brannik', 'Georgi', 'Golemshinski', 'ffffffff-9333-3174-ffff-ffffef05ac4a', 2, 1, 1, 1, 1, 'd6lZe_6fQGeVQEEHQgoSpN:APA91bG_sXC5YbgXYSaTXUtABEWugOoLwDKkVuh-8tJxpHrxL3GZS5hSe5mWwl5YdIXJIFHDT8UxKi49-iZNmejwiTC02MD-lTRSNKmdchCKvgRBcJZDFHHlEjvvsJcBiz7BUst7ox67'),
+	(1, 'brannik', 'Георги', 'Golemshinski', 'ffffffff-9333-3174-ffff-ffffef05ac4a', 2, 1, 1, 1, 1, 'ccVdehfTQz-S9umlwxrGCD:APA91bF-iX5_jJ1Ppdp8uU6Q9vX8oKeBc17ugNbp9UObot9hVID27Zn3RArk_joXGQ5usvGgGNl0e7FFSbcVXSq647yjByPO9NcUlp3ZC5VYXD7cfhYHr7-dEITGs8_9RpkNpEOJJrXs'),
 	(9, 'Mitaka', 'Mitaka ', ' Dimitrov', 'ffffffff-c665-08d3-ffff-ffffef05ac4a', 1, 1, 1, 1, 1, ''),
-	(10, 'danailov', 'Velizar', 'Andreev ', 'ffffffff-fd00-1cf7-ffff-ffffcf5be32c', 1, 1, 1, 1, 1, '');
+	(10, 'danailov', 'Velizar', 'Andreev ', 'ffffffff-fd00-1cf7-ffff-ffffcf5be32c', 1, 1, 1, 1, 1, ''),
+	(11, 'petur', 'pesho', 'petrov', 'asdasdasdad', 1, 1, 1, 1, 2, 'ccVdehfTQz-S9umlwxrGCD:APA91bF-iX5_jJ1Ppdp8uU6Q9vX8oKeBc17ugNbp9UObot9hVID27Zn3RArk_joXGQ5usvGgGNl0e7FFSbcVXSq647yjByPO9NcUlp3ZC5VYXD7cfhYHr7-dEITGs8_9RpkNpEOJJrXs');
 /*!40000 ALTER TABLE `account` ENABLE KEYS */;
 
 -- Дъмп структура за таблица system_db.dates
@@ -495,7 +496,7 @@ INSERT INTO `notifycations` (`id`, `sender_id`, `reciever_id`, `type`, `status`,
 	(5, 9, 1, 3, 0, '6', 1, '2021-03-27 07:17:08', 2),
 	(36, 1, 9, 1, 0, '1', 1, '2021-03-24 08:51:57', 1),
 	(46, 9, 1, 1, 0, '51', 1, '2021-03-27 07:41:11', 1),
-	(47, 9, 1, 1, 0, '2', 1, '2021-03-27 08:05:45', 2);
+	(47, 9, 1, 2, 0, '1', 1, '2021-03-27 15:00:17', 2);
 /*!40000 ALTER TABLE `notifycations` ENABLE KEYS */;
 
 -- Дъмп структура за таблица system_db.updates
@@ -504,15 +505,16 @@ CREATE TABLE IF NOT EXISTS `updates` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `version` int(11) NOT NULL DEFAULT '0',
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `info` text COLLATE utf8_unicode_ci NOT NULL,
+  `info` varchar(300) COLLATE utf8_unicode_ci NOT NULL DEFAULT 'none',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
--- Дъмп данни за таблица system_db.updates: ~1 rows (приблизително)
+-- Дъмп данни за таблица system_db.updates: ~2 rows (приблизително)
 DELETE FROM `updates`;
 /*!40000 ALTER TABLE `updates` DISABLE KEYS */;
 INSERT INTO `updates` (`id`, `version`, `date`, `info`) VALUES
-	(1, 2, '2021-03-27 08:46:43', 'ВАЖНО !!! За да актуализирате успешно трябва да изтриете кеш данните на старото приложение, след което да изтриете старото приложение и да инсталирате новото.');
+	(1, 1000, '2021-03-27 15:16:25', 'ВАЖНО !!! За да актуализирате успешно трябва да изтриете кеш данните на старото приложение, след което да изтриете старото приложение и да инсталирате новото.'),
+	(2, 1001, '2021-03-27 15:16:28', 'none');
 /*!40000 ALTER TABLE `updates` ENABLE KEYS */;
 
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

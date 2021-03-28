@@ -88,11 +88,13 @@
 
         function updateMe(){
             require("config.php");
-            $sqlGetVer = "SELECT * FROM updates ORDER BY version ASC LIMIT 1";
+            $sqlGetVer = "SELECT * FROM updates ORDER BY date DESC LIMIT 1";
             $version = $conn->query($sqlGetVer);
             $row = $version->fetch_assoc();
             $this->data = array(
 				"last_version" => $row["version"],
+				"last_version_sub" => $row["sub_v"],
+				"last_version_sub_sub" => $row["sub_sub_v"],
 				"info" => $row["info"]
 			);
 			
