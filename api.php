@@ -24,6 +24,8 @@
 	define("REQUEST_DATE","request_date");
 	define("UPDATE_TOKEN","update_token");
 	define("TEST","test");
+	define("GET_EXTRA_DATES","get_extra_dates");
+	define("ADD_NEW_EXTRA_DATE","save_new_extra_date");
 	
 	// admin functions
 	define("ADMIN_GET_ACCOUNTS_ALL","adminGetAccounts");
@@ -95,6 +97,12 @@
 				break;
 			case UPDATE_TOKEN:
 				echo $function->update_token($_GET["acc_id"],$_GET["token"]);
+				break;
+			case GET_EXTRA_DATES:
+				echo $function->get_extra_dates($_GET["acc_id"]);
+				break;
+			case ADD_NEW_EXTRA_DATE:
+				echo $function->add_extra_date($_GET["acc_id"],$_GET["type"],$_GET["count"],$_GET["date"]);
 				break;
 				
 			// admin requests

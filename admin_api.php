@@ -14,6 +14,13 @@
 			$result = $conn->query($sqlGetAcc);
 			if($result->num_rows > 0){
 				foreach($result as $account){
+					$token = $account["token"];
+					$tokenFin;
+					if(!empty($token)){
+						$tokenFin = $token;
+					}else{
+						$tokenFin = "NONE";
+					}
 					$this->tempData = array(
 						"acc_id" => $account["id"],
 						"username" => $account["username"],
@@ -21,7 +28,7 @@
 						"s_name" => $account["s_name"],
 						"rank" => $account["rank"],
 						"sklad" => $account["sklad"],
-						
+						"token" => $tokenFin
 					);
 					array_push($this->data,$this->tempData); 
 				}
@@ -38,7 +45,7 @@
 		
 		function edit_account($acc_id,$username,$f_name,$s_name,$rank,$sklad){
 			$this->tempData = array(
-				"RESPONSE" => "Acc with id [" . $acc_id ."] has ben edited !!!"
+				"RESPONSE" => "Acc with id [" . $acc_id ."] has ben edited !!! <" . $username .",". $f_name .",". $s_name ."," . $rank . ",". $sklad .">"
 			);
 			array_push($this->data,$this->tempData);
 			return json_encode($this->data,JSON_UNESCAPED_UNICODE);

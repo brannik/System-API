@@ -6,7 +6,7 @@
         public $accounts = array();
         public $realName = "NONE";
         public $skladNames = array("Неизвестен","Първи","Втори","Трети","Четвърти","Победа");
-        public $docStatus = array("НЕ Отразена","Отразена");
+        public $docStatus = array("0","1");
         function logIn($id,$month){
             require("config.php");
             $sql = "SELECT * FROM account WHERE device_id='" . $id . "'";
@@ -91,13 +91,11 @@
             $sqlGetVer = "SELECT * FROM updates ORDER BY date DESC LIMIT 1";
             $version = $conn->query($sqlGetVer);
             $row = $version->fetch_assoc();
-            $this->data = array(
+            $this->tempData = array(
 				"last_version" => $row["version"],
-				"last_version_sub" => $row["sub_v"],
-				"last_version_sub_sub" => $row["sub_sub_v"],
 				"info" => $row["info"]
 			);
-			
+			array_push($this->data,$this->tempData);
             return json_encode($this->data,JSON_UNESCAPED_UNICODE);
         }
 
@@ -515,6 +513,22 @@
 			$coutUn = $conn->query($sqlGetDoc);
 			$total = 0;
 			$unChecked = 0;
+			$hours_count = 0;
+			$days_count = 0;
+			
+			$getDays = "SELECT * FROM extra WHERE owner='" . $acc_id . "' AND type='1' AND count >='1'";
+			$res = $conn->query($getDays);
+			if($res->num_rows > 0){
+				$days_count = $res->num_rows;
+			}
+			
+			$getHours =  "SELECT * FROM extra WHERE owner='" . $acc_id . "' AND type='2' AND count >='1'";
+			$resH = $conn->query($getHours);
+			if($resH->num_rows > 0){
+				foreach($resH as $hour){
+					$hours_count = $hours_count + $hour["count"];
+				}
+			}
 	
 			if($countResult->num_rows > 0){
 				$total = $countResult->num_rows;
@@ -526,7 +540,9 @@
 			
 			$this->tempData = array(
 				"COUNT_TOTAL" => $total,
-				"COUNT_UNCHECKED" => $unChecked
+				"COUNT_UNCHECKED" => $unChecked,
+				"COUNT_DAYS" => $days_count,
+				"COUNT_HOURS" => $hours_count
 			);
 			array_push($this->data,$this->tempData);
 			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
@@ -645,6 +661,67 @@
 				);
 				array_push($this->data,$this->tempData);
 			}
+			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
+		}
+		
+		function get_extra_dates($acc_id){
+			require("config.php");
+			$sqlDisplayDates = "SELECT * FROM extra WHERE owner='". $acc_id ."' AND count >= '1'";
+			$result = $conn->query($sqlDisplayDates);
+			if($result->num_rows > 0){
+				foreach($result as $row){
+					$this->tempData = array(
+						"DATE_ID" => $row["id"],
+						"DATE_TYPE" => $row["type"],
+						"DATE_OWNER" => $row["owner"],
+						"DATE" => $row["date"],
+						"DATE_VOLUME" => $row["count"]
+					);
+					array_push($this->data,$this->tempData);
+				}
+			}
+			
+			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
+		}
+		
+		function add_extra_date($acc_id,$type,$count,$date){
+			require("config.php");
+			if($type == 1){
+				$sqlInsert = "INSERT INTO extra (owner,type,count,date) VALUES('" . $acc_id . "','" . $type . "','1','" . $date . "')";
+				try{
+					if($conn->query($sqlInsert) === TRUE){
+						$this->tempData = array(
+							"REQ_STATE" => 1,
+							"RESPONSE" => "OK"
+						);
+						array_push($this->data,$this->tempData);
+					}
+				}catch(MySQLException $e){
+					$this->tempData = array(
+						"REQ_STATE" => 0,
+						"RESPONSE" => $e
+					);
+					array_push($this->data,$this->tempData);
+				}				
+			}else if($type == 2){
+				$sqlInsert = "INSERT INTO extra (owner,type,count,date) VALUES('" . $acc_id . "','" . $type . "','" . $count . "','" . $date . "')";
+				try{
+					if($conn->query($sqlInsert) === TRUE){
+						$this->tempData = array(
+							"REQ_STATE" => 1,
+							"RESPONSE" => "OK"
+						);
+						array_push($this->data,$this->tempData);
+					}
+				}catch(MySQLException $e){
+					$this->tempData = array(
+						"REQ_STATE" => 0,
+						"RESPONSE" => $e
+					);
+					array_push($this->data,$this->tempData);
+				}
+			}
+			
 			return json_encode($this->data,JSON_UNESCAPED_UNICODE);
 		}
 	}
